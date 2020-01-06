@@ -22,7 +22,7 @@ void AudioManager::load()
 {
 	//  Load sound into memory
 
-	result = fmodSystem->createSound("storm.wav", FMOD_DEFAULT, 0, &sound1);
+	result = fmodSystem->createSound("pokeball.mp3", FMOD_DEFAULT, 0, &sound1);
 	sound1->setMode(FMOD_LOOP_OFF);
 
 	result = fmodSystem->createSound("pokemon.mp3", FMOD_DEFAULT, 0, &music1);
@@ -34,7 +34,7 @@ void AudioManager::playPowerUpEffect()
 {
 	result = fmodSystem->playSound(FMOD_CHANNEL_FREE, sound1, false, &channel);
 	channel->setPan(0.0);
-	channel->setVolume(2);
+	channel->setVolume(0.2);
 	channel->setPaused(false);
 }
 

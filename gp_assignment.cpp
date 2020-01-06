@@ -9,6 +9,8 @@
 using namespace std;
 
 
+#define ULTIMATE_TIMER 300 //means ultimate gt 5 second
+
 #pragma comment (lib, "OpenGL32.lib")
 #pragma comment (lib, "GLU32.lib")
 
@@ -29,21 +31,34 @@ float fingerYRotate = 0.0f;
 float fingerZRotate = 0.0f;
 
 float increment = 0.0f;
-
+float atkIncrement = 0.0f;
+float atkIncrement2 = 0.0f;
+int ultimateTimer =450;
 
 float z = 0.0, speed = 1.0;
 string file[] = { "body.bmp", "gold_metal.bmp" };
-int i = 0;
+int i = 0, backGround = 0;
 string getFileName = file[i];
 //texture is for background, texture 2 is for rectangle, so is BMP, BMP2.....
 GLuint texture = 0, texture2 = 0, texture3 = 0, texture4 = 0;
 BITMAP BMP, BMP2, BMP3, BMP4;
 HBITMAP hBMP = NULL, hBMP2 = NULL, hBMP3 = NULL, hBMP4 = NULL;
 boolean checkinput = 0, switchONOFF = 1;
-// set view
-bool reset = false, changeCamera = false, changeWeapon = true;
-boolean orThoView = 1, perspectiveView = 0, isRotate = 0, weaponOneStatus = 0, weaponTwoStatus = 1;
+// set view and coordinate
+bool reset = false, changeCamera = false, changeWeapon = true, timerCountDown=false, playSong = false;
+boolean orThoView = 1, perspectiveView = 0, isRotate = 0, weaponOneStatus = 0, weaponTwoStatus = 1, pokeballStatus = 0,backgroundStatus = 2;
 //boolean orThoView = 0, perspectiveView = 1, isRotate = 0, weaponStatus = 1;
+//robot status
+//boolean isRun = 0, isRunUpper = 0, isRunLower = 0;
+bool isRun = false, isRunUpper = false, isReachTop = false, isReachBottom = false, isAttack = false;
+bool isHammerTop = false, isHammerBottom = false, isSwordTop = false;
+bool isAtk1 = false, isAtk2 = false, isAtk3 = false, isAtk4 = false;
+float runAngle = 0,attackAngle1 = 0.0, attackAngle2 =0.0, attackAngle3 = 0.0, attackAngle4 = 0.0;
+ //global variables
+
+
+
+
 LRESULT WINAPI WindowProcedure(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
@@ -99,12 +114,42 @@ LRESULT WINAPI WindowProcedure(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 			rotateCam2 -= 20;
 		}
+		else if (wParam == 0x31) {
+			timerCountDown = true;
+
+			if (pokeballStatus == 0 && backgroundStatus == 0) {
+				pokeballStatus = 1;
+				backgroundStatus = 1;
+				sounds->playPowerUpEffect();
+			}
+
+			
+		}
 
 		else if (wParam == 0x33) {
 			changeWeapon = true;
 			weaponOneStatus = !weaponOneStatus;
 			weaponTwoStatus = !weaponTwoStatus;
+
 			reset = true;
+		}
+
+		else if (wParam =='W') {
+			if (isRun == false) {
+				isRun = true;
+				isRunUpper = false;
+				increment = 4.0f;
+			}
+		}
+
+		else if (wParam == 'A') {
+			if (isAttack == false) {
+				isAttack = true;
+				isAtk1 = true;
+				atkIncrement = 9.0f;
+				atkIncrement2 = 15.0f;
+				isHammerTop = true;
+			}
 		}
 
 		else if (wParam == VK_SPACE)
@@ -222,24 +267,24 @@ void drawBackground(string getFileName) {
 
 void TextureCubeORRectangle(float resizes, float height, float thickness, string getFileName)
 {
-	//LPCSTR GET;
-	//GET = getFileName.c_str();
+	LPCSTR GET;
+	GET = getFileName.c_str();
 
-	////Step 3: Initial texture Info
-	//glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-	//HBITMAP hBMP2 = (HBITMAP)LoadImage(GetModuleHandle(NULL), GET,
-	//	IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION | LR_LOADFROMFILE);
-	//GetObject(hBMP2, sizeof(BMP2), &BMP2);
+	//Step 3: Initial texture Info
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+	HBITMAP hBMP2 = (HBITMAP)LoadImage(GetModuleHandle(NULL), GET,
+		IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION | LR_LOADFROMFILE);
+	GetObject(hBMP2, sizeof(BMP2), &BMP2);
 
-	////Step 4: Assign texture to polygon
-	//glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-	//glEnable(GL_TEXTURE_2D);
-	//glGenTextures(1, &texture2); //Generate texture
-	//glBindTexture(GL_TEXTURE_2D, texture2); //can bind with the texture using 2D array
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, BMP2.bmWidth, BMP2.bmHeight, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, BMP2.bmBits);
-	//glTexCoord2f(0.0f, 0.0f);
+	//Step 4: Assign texture to polygon
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	glEnable(GL_TEXTURE_2D);
+	glGenTextures(1, &texture2); //Generate texture
+	glBindTexture(GL_TEXTURE_2D, texture2); //can bind with the texture using 2D array
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, BMP2.bmWidth, BMP2.bmHeight, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, BMP2.bmBits);
+	glTexCoord2f(0.0f, 0.0f);
 
 
 	glPushMatrix();
@@ -303,9 +348,9 @@ void TextureCubeORRectangle(float resizes, float height, float thickness, string
 	glPopMatrix();
 
 	//Step5: Remove Texture Info
-	//glDisable(GL_TEXTURE_2D);
-	//DeleteObject(hBMP2);
-	//glDeleteTextures(1, &texture2);
+	glDisable(GL_TEXTURE_2D);
+	DeleteObject(hBMP2);
+	glDeleteTextures(1, &texture2);
 }
 
 
@@ -384,7 +429,7 @@ void drawHead() {
 	//neck
 	glPushMatrix();
 	glTranslatef(-0.75f, 1.55f, 0.4f);
-	TextureCubeORRectangle(0.5f, 0.75f, 0.5f, "metal.bmp");
+	TextureCubeORRectangle(0.5f, 0.75f, 0.5f, "yellow.bmp");
 	glPopMatrix();
 	//	face
 	glPushMatrix();
@@ -499,18 +544,24 @@ void drawBody() {
 
 	glPushMatrix();
 	glTranslatef(-0.80f, -0.46f, 0.0f);
-	TextureCubeORRectangle(0.75f, 1.0f, 1.5f, file[i]);
+	TextureCubeORRectangle(0.75f, 1.0f, 1.5f, "jetengine.bmp");
 	glPopMatrix();
 
 	glPushMatrix();
-	glTranslatef(-1.165f, -0.46f, 0.0f);
-	TextureCubeORRectangle(0.37f, 1.0f, 1.5f, "silver.bmp");
+	glTranslatef(-1.185f, -0.46f, 0.0f);
+	TextureCubeORRectangle(0.41f, 1.0f, 1.5f, "black.bmp");
 	glPopMatrix();
 
 
 	glPushMatrix();
 	glTranslatef(-0.05f, -0.46f, 0.0f);
-	TextureCubeORRectangle(0.35f, 1.0f, 1.5f, "silver.bmp");
+	TextureCubeORRectangle(0.35f, 1.0f, 1.5f, "black.bmp");
+	glPopMatrix();
+
+
+	glPushMatrix();
+	glTranslatef(-1.2f, -1.44f, 0.0f); //1.35
+	TextureCubeORRectangle(1.5f, 1.0f, 1.5f, file[i]);
 	glPopMatrix();
 
 	//glPushMatrix();
@@ -523,7 +574,35 @@ void drawBody() {
 
 
 void drawLeftHand() {
+	glPushMatrix();
+	//hand move angle
+	if (isRun == true) {
 
+		if (isRunUpper == true)
+		{
+			runAngle += increment;
+		}
+		else if(isRunUpper == false) {
+			runAngle -= increment;
+		}
+		if (runAngle >= 35 && isRunUpper == true) {
+			runAngle -= increment;
+			isRunUpper = false;
+		}
+		if (runAngle <= -35 && isRunUpper == false) {
+			runAngle += increment;
+			isRunUpper = true;
+		}
+
+
+	}
+	if (isRun == 1) {
+		glTranslatef(0.84f, 0.8f, 0.43f);
+		glRotatef(runAngle, 1.0, 0.0, 0.0);
+		glTranslatef(-0.84f, -0.8f, -0.43f);
+
+	}
+	
 	glPushMatrix();
 	glRotatef(90, 0.0f, 0.0f, 1.0f);
 	glTranslatef(0.94f, -0.7f, 0.23f);
@@ -536,14 +615,20 @@ void drawLeftHand() {
 	glTranslatef(0.9f, -1.45f, 0.25f);
 	TextureCubeORRectangle(0.75f, 0.75f, 0.75f, "gold_metal.bmp");
 	glPopMatrix();
+	//lower hand movement
+	glPushMatrix();
+	if (isRun == 1) {
+		glTranslatef(0.54f, 0.8f, 0.23f);
+		glRotatef(runAngle-30, 1.0, 0.0, 0.0);
+		glTranslatef(-0.54f, -0.8f, -0.23f);
 
-
+	}
 	glPushMatrix();
 	glRotatef(90, 0.0f, 0.0f, 1.0f);
 	glTranslatef(0.25f, -1.2f, 0.31f);
 	TextureCubeORRectangle(0.75f, 0.25f, 0.55f, "metal.bmp");
 	glPopMatrix();
-
+	
 
 	glPushMatrix();
 	glRotatef(90, 0.0f, 0.0f, 1.0f);
@@ -556,7 +641,11 @@ void drawLeftHand() {
 	glTranslatef(-1.2f, -1.2f, 0.28f);
 	TextureCubeORRectangle(0.75f, 0.25f, 0.65f, "metal.bmp");
 	glPopMatrix();
-
+	glPushMatrix();
+	drawFinger();
+	glPopMatrix();
+	glPopMatrix();
+	glPopMatrix();
 }
 
 void drawRightHand() {
@@ -567,36 +656,19 @@ void drawRightHand() {
 	TextureCubeORRectangle(0.50f, 0.50f, 0.55f, "metal.bmp");
 	glPopMatrix();
 
-	glPushMatrix();
-	glRotatef(90, 0.0f, 0.0f, 1.0f);
-	glTranslatef(0.9f, 1.80f, 0.55f);
-	TextureSphere(0.50f, 30.0f, 30.0f, "pokeball.bmp");
-	glPopMatrix();
-
-	//glPushMatrix();
-	//glTranslatef(-2.5, 0.15, 0.65);
-	///*glPushMatrix();*/
-	//glRotatef(90.0, 1.00, 0.0, 0.0);
-	//glRotatef(90.0, 0.00, 1.00, 0.0);
-	//glRotatef(45.0, 0.00, 1.00, 0.0);
-	////glPushMatrix();
-	//glTranslatef(0.0, 0.0, -1.0);
-	//TextureCylinderORCorn(0.15, 0.15, 1.75, 20, 25, "handle.bmp");
-
-	//glPopMatrix();
 
 
 
-	//glPushMatrix();
-	//glRotatef(90, 0.0f, 0.0f, 1.0f);
-	//glTranslatef(-1.0f, 2.5f, 0.25f);
-	//glRotatef(45, 0.0f, 1.0f, 1.0f);
-	//glTranslatef(-0.5, 0.0, 0.45f);
-	//TextureCubeORRectangle(2.0f, 1.0f, 0.55f, "hammermetal.bmp");
-	//glPopMatrix();
 
 	if (changeWeapon = true) {
 		if (weaponOneStatus == 1) {
+
+			glPushMatrix();
+			glRotatef(90, 0.0f, 0.0f, 1.0f);
+			glTranslatef(0.9f, 1.80f, 0.55f);
+			TextureSphere(0.50f, 30.0f, 30.0f, "pokeball.bmp");
+			glPopMatrix();
+
 			glPushMatrix();
 			glTranslatef(-3.1, -0.35, 0.65);
 
@@ -611,6 +683,100 @@ void drawRightHand() {
 		}
 
 		if (weaponTwoStatus == 1) {
+			glPushMatrix();
+			if (isAttack == true) {
+
+				glTranslatef(0.84f, 0.8f, 0.43f);
+				glRotatef(attackAngle1, 1.0, 0.0, 0.0);
+				glTranslatef(-0.84f, -0.8f, -0.43f);
+
+				glTranslatef(-0.94f, 0.5f, 1.13f);
+				glRotatef(attackAngle2, 0.0, 0.0, 1.0);
+				glTranslatef(0.94f, -0.5f, -1.13f);
+
+
+				glTranslatef(-0.64f, 0.4f, 0.63f);
+				glRotatef(attackAngle3, 1.0, 0.0, 0.0);
+				glTranslatef(0.64f, -0.4f, -0.63f);
+
+
+				glTranslatef(-1.24f, 1.1f, 1.4f);
+				glRotatef(attackAngle4, 0.0, 0.0, 1.0);
+				glTranslatef(1.24f, -1.1f, -1.4f);
+
+				if (isAtk1 == true) {
+					attackAngle1 = attackAngle1 - atkIncrement;
+				}
+				else if (isAtk2 == true) {
+					attackAngle2 = attackAngle2 + atkIncrement;
+				}
+
+				else if (isAtk3 == true) {
+					attackAngle3 = attackAngle3 - atkIncrement;
+				}
+
+				else if (isAtk4 == true) {
+					if (isHammerTop == false) {
+						attackAngle4 = attackAngle4 - atkIncrement2;
+					}
+					else if (isHammerTop == true) {
+
+						attackAngle4 = attackAngle4 + atkIncrement2;
+					}
+
+					if (attackAngle4 <= -135 && isHammerTop == false) {
+						isHammerTop = true;
+						attackAngle4 = attackAngle4 + atkIncrement2;
+					}
+
+					if (attackAngle4 >= 0 && isHammerTop == true) {
+						isHammerTop = false;
+						attackAngle4 = attackAngle4 - atkIncrement2;
+					}
+				}
+
+			}
+
+
+			if (attackAngle1 <= -180) {
+				isAtk1 = false;
+				isAtk2 = true;
+			}
+
+			if (attackAngle2 >= 45) {
+				isAtk2 = false;
+				isAtk3 = true;
+			}
+
+			if (attackAngle3 <= -55) {
+				isAtk3 = false;
+				isAtk4 = true;
+			}
+
+			if (attackAngle3 >= 55) {
+				isAtk4 = false;
+			}
+
+			if (attackAngle4 <= -45&&isHammerBottom == false) {
+				isHammerTop = true;
+				attackAngle4 = attackAngle4 + atkIncrement2;
+			}
+
+			if (attackAngle4 >= 0 && isHammerTop == true) {
+				isHammerBottom = true;
+				attackAngle4 = attackAngle4 - atkIncrement2;
+			}
+
+
+		
+
+			glPushMatrix();
+			glRotatef(90, 0.0f, 0.0f, 1.0f);
+			glTranslatef(0.9f, 1.80f, 0.55f);
+			TextureSphere(0.50f, 30.0f, 30.0f, "pokeball.bmp");
+			glPopMatrix();
+
+
 			glPushMatrix();
 			glTranslatef(-2.5, 0.15, 0.65);
 			/*glPushMatrix();*/
@@ -628,6 +794,7 @@ void drawRightHand() {
 			glRotatef(45, 0.0f, 1.0f, 1.0f);
 			glTranslatef(-0.5, 0.0, 0.45f);
 			TextureCubeORRectangle(2.0f, 1.0f, 0.55f, "hammermetal.bmp");
+			glPopMatrix();
 			glPopMatrix();
 		}
 		changeWeapon = false;
@@ -722,11 +889,6 @@ void drawWholeBody() {
 	drawBody();
 	drawLeftHand();
 	drawRightHand();
-	drawFinger();
-
-
-
-
 
 }
 
@@ -741,7 +903,13 @@ void display()
 	glEnable(GL_DEPTH_TEST);
 
 
-
+	if (timerCountDown = true) {
+		ultimateTimer--;
+		if (ultimateTimer <= 0)
+		{
+			timerCountDown = false;
+		}
+	}
 
 	//gluPerspective(90.0, 1.0 , -1.0, 2.0);
 	//glFrustum(-1.0, 1.0, -1.0, 1.0, 1.0, 3.0);
@@ -766,30 +934,53 @@ void display()
 		}
 	}
 
+	if (backgroundStatus == 0) {
+
+		glPushMatrix();
+		drawBackground("pokeballclose.bmp");
+		glPopMatrix();
+
+	}
+
+	if (backgroundStatus == 1) {
+
+		glPushMatrix();
+		drawBackground("pokeballopen.bmp");
+		glPopMatrix();
+
+	}
+
+	if (ultimateTimer <= 0 && backgroundStatus == 1) {
+		 
+			backgroundStatus = 2;
+			sounds->playSoundTrack();
+		}
+
 
 	glMatrixMode(GL_MODELVIEW);
 	glEnable(GL_LIGHTING);
 
+	if (backgroundStatus == 2) {
+		//glPushMatrix();
+		//drawBackground("galaxy.bmp");
+		//glPopMatrix();
 
-	//glPushMatrix();
-	//drawBackground("galaxy.bmp");
-	//glPopMatrix();
-	glPushMatrix();
-	if (perspectiveView == 1) {
-		glTranslatef(0.0, 0.0, z);
+		glPushMatrix();
+		if (perspectiveView == 1) {
+			glTranslatef(0.0, 0.0, z);
+		}
+		else if (orThoView == 1) {
+			glRotatef(rotateCam2, 1.0, 0.0, 0.0);
+
+			glRotatef(rotateCam, 0.0, 1.0, 0.0);
+		}
+		drawHead();
+		drawWholeBody();
+
+
+		glPopMatrix();
+
 	}
-	else if (orThoView == 1) {
-		glRotatef(rotateCam2, 1.0, 0.0, 0.0);
-
-		glRotatef(rotateCam, 0.0, 1.0, 0.0);
-	}
-	drawHead();
-	drawWholeBody();
-
-
-	glPopMatrix();
-
-
 
 
 	//--------------------------------
@@ -848,7 +1039,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int nCmdShow)
 	sounds = new AudioManager;
 	sounds->initSound();
 	sounds->load();
-	sounds->playSoundTrack();
+	//sounds->playSoundTrack();
 
 
 	glMatrixMode(GL_PROJECTION);

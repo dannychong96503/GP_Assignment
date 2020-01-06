@@ -15,7 +15,7 @@ using namespace std;
 #pragma comment (lib, "GLU32.lib")
 
 
-AudioManager * sounds = new AudioManager;
+//AudioManager * sounds = new AudioManager;
 
 #define WINDOW_TITLE "Assignment"
 void drawBackground(string getFileName);
@@ -120,7 +120,7 @@ LRESULT WINAPI WindowProcedure(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
 			if (pokeballStatus == 0 && backgroundStatus == 0) {
 				pokeballStatus = 1;
 				backgroundStatus = 1;
-				sounds->playPowerUpEffect();
+				//sounds->playPowerUpEffect();
 			}
 
 			
@@ -143,7 +143,7 @@ LRESULT WINAPI WindowProcedure(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
 		}
 
 		else if (wParam == 'A') {
-			if (isAttack == false) {
+			if (isAttack == false&&weaponTwoStatus == 1) {
 				isAttack = true;
 				isAtk1 = true;
 				atkIncrement = 9.0f;
@@ -953,7 +953,7 @@ void display()
 	if (ultimateTimer <= 0 && backgroundStatus == 1) {
 		 
 			backgroundStatus = 2;
-			sounds->playSoundTrack();
+			//sounds->playSoundTrack();
 		}
 
 
@@ -1036,9 +1036,9 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int nCmdShow)
 
 
 
-	sounds = new AudioManager;
-	sounds->initSound();
-	sounds->load();
+	//sounds = new AudioManager;
+	//sounds->initSound();
+	//sounds->load();
 	//sounds->playSoundTrack();
 
 
